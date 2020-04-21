@@ -23,7 +23,7 @@ int main(void){
     fd = open("text.txt", O_RDWR|O_CREAT, 0777);
     if(fd < 0)
     {
-        printf("Can\'t open shm\n");
+        printf("Can\'t open\n");
         return -1;
     }
 
