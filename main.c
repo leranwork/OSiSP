@@ -14,11 +14,11 @@
 #include <sys/mman.h>
 
 int main(void){
+    size_t pagesize = getpagesize();
     char numbers[10] = "1234567890";
     int fd, result;
     char *region;
-    int catet1 = 25, catet2 = 47;
-    printf("System page size: %u bytes\n", catet1);
+    printf("System page size: %zu bytes\n", pagesize);
     //создание файла для общего доступа
     fd = open("text.txt", O_RDWR|O_CREAT, 0777);
     if(fd < 0)
@@ -28,18 +28,18 @@ int main(void){
     }
 
     write (fd,"/0", sizeof(char));
-    region=(char*)mmap(NULL,catet1,PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
+    region=(char*)mmap(NULL,pagesize,PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
     //если не получилось сделать map
     if (region == MAP_FAILED)
     {
-        perror("Could not mmap shm");
+        perror("Could not mmap");
         return -1;
     }
     
     result=fork();
     if(result<0)
     {
-        printf("cant fork child\n");
+        printf("Can't fork child\n");
         return -1;
     } else if (result > 0)
     {
