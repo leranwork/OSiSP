@@ -13,40 +13,49 @@
 #include <sys/mman.h>
 #include <ctype.h>
 
-void handler()
+void handler(int idsignal)
 {
-    printf("Родительский процесс передал данные дочернему\n");
+    
+    if (idsignal==0) {
+        printf("Родительский процесс передал данные дочернему\n");
+        idsignal++;
+    }
+    else {
+        printf("Дочерний процесс передал данные родительскому\n");
+        idsignal--;
+    }
 }
 
 
 int main(void)
 {
-    signal(SIGUSR1, handler); //сигнал о передаче данных дочернему процессу
+    
     int fd, result;
     char *region;
+    char stroka[1024];
     char numbers[] = "1234567890";
     int j=0;
     size_t pagesize = getpagesize();
+    signal(SIGUSR1, handler); //сигнал о передаче данных дочернему процессу
     
     fd = open("text.txt", O_RDWR|O_CREAT, 0777);
+    
     if(fd < 0)
     {
-        printf("Can\'t open shm\n");
+        printf("Can\'t open \n");
         return -1;
     }
     
     write (fd,"/0", sizeof(char));
     region=(char*)mmap(NULL,pagesize,PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
     
-    char *stroka="qwertops1dfg5hjkl";
-    region = stroka;
-    
-    
     if (region == MAP_FAILED)
     {
-        perror("Could not mmap");
-        return -1;
+        close(fd);
+        perror("Error mmapping the file");
+        exit(EXIT_FAILURE);
     }
+    
     
     result=fork();
     if(result<0)
@@ -56,47 +65,43 @@ int main(void)
     }
     else if (result > 0)
     {
+        printf("Введите строку: ");
+        gets(stroka);
+        strcpy(region, stroka);
         //родительский процесс
         kill(result, SIGUSR1);
         signal(SIGUSR1, handler); //сигнал о том, что родительскому процессу были переданы данные из дочернего
         sleep(8);
-        printf("Nubmers: ");
+        printf("Информация, полученная родительским процессом: ");
         printf("%s\n",region);
-        printf("Parent exit\n");
+        printf("Выход из родительского процесса\n");
+        if (munmap(region, pagesize) <0 )
+        {
+            perror("Could not munmap"); return -1;
+        }
     }
     else
     {
-        printf("child process\n");
+        sleep(10);
+        printf("Дочерний процесс\n");
         //дочерний процесс
         char *s = region;
         char str[20] = "NO";
         
-        printf("Shared file info: %s \n",s);
+        printf("Информация, полученная из родительского процесса: %s \n",s);
         
         for(int i=0; i<strlen(s);i++){
             if(strchr(numbers, s[i]) != NULL){ //если символ - цифра
                 str[j++] = s[i]; //копируем
             }
         }
-        printf("a: %s\n",str);
         
-        strcat(region, str);
-        
-        if (msync(region, strlen(region), MS_SYNC) == -1)
-        {
-            perror("Could not sync the file to disk");
-        }
-        
-        if (munmap(region, strlen(region)) == -1)
-        {
-            close(fd);
-            perror("Error un-mmapping the file");
-            exit(EXIT_FAILURE);
-        }
-        
+        printf("Информация, отправляемая родительскому процессу: %s\n",str);
+        strcpy(region, str);
         close(fd);
-        kill(getppid(), 0);
-        printf("Child exit\n");
+        kill(getppid(), SIGUSR1);
+        printf("Выход из дочернего процесса\n");
     }
+    
     return 0;
 }
