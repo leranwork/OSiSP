@@ -109,17 +109,14 @@ int main() {
     sem_t *semaphore1 = sem_open(SEM_NAME_1, O_EXCL);
     sem_t *semaphore2 = sem_open(SEM_NAME_2, O_EXCL);
     for(int i=0; i<5;i++){
-        sem_getvalue(semaphore1, &timer);
-        count = (int)timer;
+        sem_wait(semaphore2);
+        sem_getvalue(semaphore1, timer);
         printf("Prinyatiy vremya: %s \n", ctime(&timer));
-        
-        while(count!=0){
-            sem_wait(semaphore1);
-            count--;
-        }
-        sem_post(semaphore2);
+        sleep(1);
+        sem_post(semaphore1);
     }
     sem_unlink(SEM_NAME_1);
     sem_unlink(SEM_NAME_2);
     return 0;
+    
 }

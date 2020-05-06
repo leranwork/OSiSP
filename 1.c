@@ -126,17 +126,25 @@
 
 int main() {
     time_t timer = time(NULL);
-    
-    sem_t *semaphore1 = sem_open(SEM_NAME_1, O_CREAT, 0777, 0);
+    time_t semtimer ;
+    sem_t *semaphore1 = sem_open(SEM_NAME_1, O_CREAT, 0777, timer);
     sem_t *semaphore2 = sem_open(SEM_NAME_2, O_CREAT, 0777, 0);
+    sem_post(semaphore2);
+    
     for(int i=0;i<5;i++){
-        printf("Tekuschee vremya: %ld", timer);
-        for(int i = 0; i < timer; i++) {
+        sem_getvalue(semaphore1, semtimer);
+        timer = time(NULL);
+        for(int i=0; i< (timer - semtimer); i++){
             sem_post(semaphore1);
         }
-        sem_wait(semaphore2);
+//        sem_wait(semaphore1);
+        printf("Tekuschee vremya: %ld\n", timer);
+        sem_post(semaphore2);
+    
     }
+    
     sem_unlink(SEM_NAME_1);
     sem_unlink(SEM_NAME_2);
     return 0;
+    
 }
