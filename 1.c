@@ -15,17 +15,15 @@ int main() {
     time_t semtimer = 0;
     sem_t *semaphore1 = sem_open(SEM_NAME_1, O_CREAT, 0777, timer);
     sem_t *semaphore2 = sem_open(SEM_NAME_2, O_CREAT, 0777, 0);
-    sem_post(semaphore2);
-    
     for(int i=0;i<5;i++){
         sem_getvalue(semaphore1, &semtimer);
         timer = time(NULL);
+        
         for(int i=0; i< (timer - semtimer); i++){
             sem_post(semaphore1);
         }
         printf("Tekuschee vremya: %ld\n", timer);
-        sleep(1);
-        sem_post(semaphore2);
+        sem_wait(semaphore2);
         
     }
     

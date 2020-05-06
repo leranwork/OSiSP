@@ -16,11 +16,10 @@ int main() {
     sem_t *semaphore1 = sem_open(SEM_NAME_1, O_EXCL);
     sem_t *semaphore2 = sem_open(SEM_NAME_2, O_EXCL);
     for(int i=0; i<5;i++){
-        sem_wait(semaphore2);
         sem_getvalue(semaphore1, &timer);
         printf("Prinyatiy vremya: %s \n", ctime(&timer));
         sleep(1);
-        sem_post(semaphore1);
+        sem_post(semaphore2);
     }
     sem_unlink(SEM_NAME_1);
     sem_unlink(SEM_NAME_2);
