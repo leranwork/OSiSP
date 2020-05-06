@@ -1,35 +1,35 @@
-#include <semaphore.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <string.h>
-#define SEM_NAME_1 "/semaphore1"
-#define SEM_NAME_2 "/semaphore2"
-
-
-int main()
-{
-    sem_t *semaphore, *mutex;
-    time_t timer = 0;
-
-    mutex=sem_open(SEM_NAME_1,O_RDWR,0);
-    semaphore=sem_open(SEM_NAME_2,O_RDWR,1);
-
-    for(int i=0;i<5;i++){
-        sem_wait(mutex);
-        if(sem_getvalue(semaphore, &timer) == -1){
-            printf("Error in get value");
-        }
-        printf("Текущее время2: %s", ctime(&timer));
-        sem_close(semaphore);
-        sem_post(mutex);
-        sleep(1);
-    }
-    sem_unlink(SEM_NAME_1);
-    sem_unlink(SEM_NAME_2);
-    return 0;
-
-}
-
+//#include <semaphore.h>
+//#include <fcntl.h>
+//#include <unistd.h>
+//#include <string.h>
+//#define SEM_NAME_1 "/semaphore1"
+//#define SEM_NAME_2 "/semaphore2"
+//
+//
+//int main()
+//{
+//    sem_t *semaphore, *mutex;
+//    time_t timer = 0;
+//
+//    mutex=sem_open(SEM_NAME_1,O_RDWR,0);
+//    semaphore=sem_open(SEM_NAME_2,O_RDWR,1);
+//
+//    for(int i=0;i<5;i++){
+//        sem_wait(mutex);
+//        if(sem_getvalue(semaphore, &timer) == -1){
+//            printf("Error in get value");
+//        }
+//        printf("Текущее время2: %s", ctime(&timer));
+//        sem_close(semaphore);
+//        sem_post(mutex);
+//        sleep(1);
+//    }
+//    sem_unlink(SEM_NAME_1);
+//    sem_unlink(SEM_NAME_2);
+//    return 0;
+//
+//}
+//
 
 //#include <semaphore.h>
 //#include <fcntl.h>
@@ -89,3 +89,37 @@ int main()
 //    sem_close(s);
 //    return 0;
 //}
+
+#include <time.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <semaphore.h>
+#include <stdio.h>
+#include <fcntl.h>
+#include <stdlib.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+
+#define SEM_NAME_1 "/semaphore1"
+#define SEM_NAME_2 "/semaphore2"
+
+int main() {
+    time_t timer = time(NULL);
+    int count = 0;
+    sem_t *semaphore1 = sem_open(SEM_NAME_1, O_EXCL);
+    sem_t *semaphore2 = sem_open(SEM_NAME_2, O_EXCL);
+    for(int i=0; i<5;i++){
+        sem_getvalue(semaphore1, &timer);
+        count = (int)timer;
+        printf("Prinyatiy vremya: %s \n", ctime(&timer));
+        
+        while(count!=0){
+            sem_wait(semaphore1);
+            count--;
+        }
+        sem_post(semaphore2);
+    }
+    sem_unlink(SEM_NAME_1);
+    sem_unlink(SEM_NAME_2);
+    return 0;
+}
